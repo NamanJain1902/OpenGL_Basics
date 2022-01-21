@@ -1,6 +1,7 @@
 #include<iostream>
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
+#include<cmath>
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 800;
@@ -53,15 +54,6 @@ int main()
     glfwSwapBuffers(window);
 
 
-
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ----------------------- values in range [-1, 1] -------------------------
-    GLfloat vertices[] = {
-        -0.5f, -0.5f, 0.0f, // left
-         0.5f, -0.5f, 0.0f, // right
-         0.0f,  0.5f, 0.0f  // top
-    };
-
     /**
      * @brief Shaders(objects) are in memory and we can only access them by references aka values.
      * all opengl objects accessed by references
@@ -95,38 +87,84 @@ int main()
     glDeleteShader(fragmentShader);
 
 
-    GLuint VAO, VBO; // VBO is array of references, since we have only one object we only need one.
+
+
+    // set up vertex data (and buffer(s)) and configure vertex attributes
+    // ----------------------- values in range [-1, 1] -------------------------
+    GLfloat vertices[] =
+	{
+		-0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Lower left corner
+		0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Lower right corner
+		0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f, // Upper corner
+		-0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Inner left
+		0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Inner right
+		0.0f, -0.5f * float(sqrt(3)) / 3, 0.0f // Inner down
+	};
+
+
+    GLfloat indices[] = {
+        0, 3, 5, // Lower left triangle
+		3, 2, 4, // Lower right triangle
+		5, 4, 1 // Upper triangle
+    };
+
+
+    GLuint VAO, VBO, EBO; // VBO is array of references, since we have only one object we only need one.
+    // Generate the VAO, VBO, and EBO with only 1 object each
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
     // binding in opengl means we make certain object the current object.
+    // Make the VAO the current Vertex Array Object by binding it
     glBindVertexArray(VAO);
+    // Bind the VBO specifying it's a GL_ARRAY_BUFFER
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // Bind the EBO specifying it's a GL_ELEMENT_ARRAY_BUFFER
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
     // Static means vertices will be modified once in many-2 time and
     // dynamic means vertices will be modified many many times.
     // DRAW means the vertices will be modified and we use to draw imange on the screen
+    // Introduce the vertices into the VBO
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); 
-
+    // Introduce the indices into the EBO
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // (PositionOfVertexAttribute, HowManyValuesPerVertex, , AmountOfDataInEachVertex)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
+
+	// Bind both the VBO and VAO to 0 so that we don't accidentally modify the VAO and VBO we created
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-
+    // Bind the EBO to 0 so that we don't accidentally modify it
+	// MAKE SURE TO UNBIND IT AFTER UNBINDING THE VAO, as the EBO is linked in the VAO
+	// This does not apply to the VBO because the VBO is already linked to the VAO during glVertexAttribPointer
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     
 
     while(!glfwWindowShouldClose(window)) 
     {
+        // Specify the color of the background
         glClearColor(0.07f, 0.13f, 0.17f, 1.0f); 
 
+        // clean the back buffer and assign the new colot to it.
         glClear(GL_COLOR_BUFFER_BIT);
 
+        // tell OpenGL which Shader Program we want to use.
         glUseProgram(shaderProgram);
+        
+        // Bind the VAO so OpenGL knows to use it.
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3); // speicifying the type of primitive we use.
+
+        // Draw the triangle using the GL_TRIANGLES primitive.
+        // glDrawArrays(GL_TRIANGLES, 0, 3); // speicifying the type of primitive we use.
+        // Draw primitives, number of indices, datatype of indices, index of indices
+        glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, (void*)0);
+
+        // Swap the back buffer with the front buffer.
         glfwSwapBuffers(window);
 
         // Take care of GLFW events.
@@ -134,12 +172,11 @@ int main()
         // like window appearing, reszing etc, if we don't procees those 
         // events, the window will be in a state of not responding.
 
-
-
     }
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram);
 
     glfwDestroyWindow(window);

@@ -33,7 +33,7 @@ int main()
     // In this case the viewport goes from x=0, y=0, to x=800, y=800
     glViewport(0, 0, 800, 800);
 
-    // Specify the color of the background.
+    // Specify the color of the background. // The Back buffer with the color we want.
     glClearColor(0.07f, 0.13f, 0.17f, 1.0f); // last value is alpha value that sets transparency level.
     // Clean the back buffer and assign the new color to it.
     glClear(GL_COLOR_BUFFER_BIT);

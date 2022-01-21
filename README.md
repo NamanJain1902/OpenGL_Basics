@@ -7,4 +7,5 @@
 
 ## Tutorials Followed
 
+- ###   [Download & Setup -> Linux](https://medium.com/@vivekjha92/setup-opengl-with-vs-code-82852c653c43)
 - ###   [OpenGL Course - Create 3D and 2D Graphics With C++ | freecodecamp](https://www.youtube.com/watch?v=45MIykWJ-C4)
